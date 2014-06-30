@@ -1,29 +1,35 @@
-task(1..2).
 person(1..2).
+role(1..4).
+group(1..2).
 
-% generate all possible task sequence 
-2{perform(T,P):task(T):person(P)}.
+% definition of workflow as paths
+path(1,1,1,0,1).
+path(2,1,0,1,0).
 
-require(1,1).
-require(2,2).
+% task and required role
+g_role(G,1):-path(G,1,R2,R3,R4). % task 1 require role 1
+g_role(G,2):-path(G,R1,1,R3,R4).
+g_role(G,3):-path(G,R1,R2,1,R4).
+g_role(G,4):-path(G,R1,R2,R3,1).
+
 member(1,1).
 member(1,2).
-member(2,2).
+member(2,1).
+member(3,2).
+member(4,2).
 
 sod(1,2).
+sod(1,3).
+%sod(1,4).
 
-% CONSTRAINT
+% solving engine
+sod(R1,R2):-role(R1;R2),sod(R2,R1).
 
-% 1. for each flow, no two persons perform in the same task
-:- task(T),person(P1;P2),perform(T,P1),perform(T,P2),P1!=P2.
+1{perform(G,R,P):person(P)}1:-role(R),g_role(G,R).
 
-% 2. Task T require R to perform
-:- person(P),task(T),require(T,R),perform(T,P),not member(R,P).
-
-% 3. SOD
-:- person(P),sod(R1,R2),
-   perform(T1,P),require(T1,R1),
-   perform(T2,P),require(T2,R2).
+:-role(R),person(P),group(G),perform(G,R,P),not member(R,P).
+:-role(R1;R2),person(P1;P2),group(G),
+  perform(G,R1,P1),perform(G,R2,P2),sod(R1,R2),P1=P2.
 
 #hide.
-#show perform(_,_).
+#show perform(_,_,_).
